@@ -61,6 +61,8 @@ class NotaEntrada:
         for i in all_saidas:
             with open(i) as f:
                 x = xmltodict.parse(f.read())
+                pp(x)
+                exit()
                 prods = x['nfeProc']['NFe']['infNFe']['det']
                 if type(prods) is list:
                     for item in prods:
@@ -77,13 +79,17 @@ class NotaEntrada:
                         self.stock_saida.update({prods['prod']['xProd']: new})
                     else:
                         self.stock_saida.update({prods['prod']['xProd']: prods['prod']['qCom']})
+                        # TODO fix this
         # pp(self.stock_saida)
 
     def get_pl(self) -> float:
         difal = self.get_icms_owned()
         stock_entrada = self.stock
         stock_saida = self.stock_saida
-        pp({x: stock_entrada[x] - stock_saida[x] for x in stock_entrada if x in stock_saida})
+        pp(stock_entrada)
+        pp(stock_saida)
+        res = {x: stock_entrada[x] - stock_saida[x] for x in stock_entrada if x in stock_saida}
+        pp(res)
         # TODO
         return 0.0
 
@@ -123,6 +129,6 @@ class NotaEntrada:
             icms_fonercedor = vicms / vbc
             difal = 0.18 - icms_fonercedor
             difal_moeda = difal * vbc
-            pp(round(difal_moeda, 3))  # TODO verificar qual round vou usar baseado valor de cobranca da contabilidade
+            # pp(round(difal_moeda, 3))  # TODO verificar qual round vou usar baseado valor de cobranca da contabilidade
             res.append(difal_moeda)
         return res
