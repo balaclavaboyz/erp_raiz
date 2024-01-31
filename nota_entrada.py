@@ -33,6 +33,30 @@ class NotaEntrada:
             valor_aliquota_icms real,
             ecan int,
             foreign key(fk_nota_entrada) references entrada(id))''')
+
+            self.cur.execute('''create table if not exists saida
+            (id integer primary key autoincrement,
+            cean int,
+            quant int,
+            valor_total real,
+            frete real,
+            chave int,
+            cpf_cnpj int,
+            cep int,
+            rua text,
+            municipio text,
+            uf text,
+            pais text,
+            nome text,
+            complemento text)''')
+
+            self.cur.execute('''create table if not exists anuncio
+            (id integer primary key,
+            cean int,
+            quant int,
+            taxa_fixa real,
+            taxa_comiss real,
+            is_full int)''')
             self.con.commit()
             # self.cur.execute('''select * from sqlite_master where type=\'table\'''')
             # for i in self.cur.fetchall():
@@ -61,6 +85,10 @@ class NotaEntrada:
         self.prods = deque()
         self.icms = deque()
 
+        self.con = sqlite3.connect(':memory:')
+        self.cur = self.con.cursor()
+        create_db()
+
         self.stock = {}
         self.stock_saida = {}
         self.stock_rules = {}
@@ -70,10 +98,6 @@ class NotaEntrada:
         self.receber_nota()
         self.process_saida()
 
-        self.con = sqlite3.connect(':memory:')
-        self.cur = self.con.cursor()
-
-        create_db()
         menu()
         # pp(self.chave)
         # pp(self.nome)
@@ -86,10 +110,23 @@ class NotaEntrada:
             with open(i) as f:
                 x = xmltodict.parse(f.read())
                 # pp(x['nfeProc']['NFe']['infNFe'])
-                self.chave.append(x['nfeProc']['NFe']['infNFe']['@Id'])
-                self.prods.append(x['nfeProc']['NFe']['infNFe']['det'])
-                self.nome.append(x['nfeProc']['NFe']['infNFe']['emit']['CNPJ'])
-                self.icms.append(x['nfeProc']['NFe']['infNFe']['total']['ICMSTot'])
+                # self.chave.append(x['nfeProc']['NFe']['infNFe']['@Id'])
+                # self.prods.append(x['nfeProc']['NFe']['infNFe']['det'])
+                # self.nome.append(x['nfeProc']['NFe']['infNFe']['emit']['CNPJ'])
+                # self.icms.append(x['nfeProc']['NFe']['infNFe']['total']['ICMSTot'])
+                cnpj = x['nfeProc']['NFe']['infNFe']['emit']['CNPJ']
+                chave = x['nfeProc']['NFe']['infNFe']['@Id']
+                emissao = x['nfeProc']['NFe']['infNFe']['ide']['dhEmi']
+                valor_total = float(x['nfeProc']['NFe']['infNFe']['total']['ICMSTot']['vNF'])
+                valor_bc = float(x['nfeProc']['NFe']['infNFe']['total']['ICMSTot']['vBC'])
+                valor_icms = float(x['nfeProc']['NFe']['infNFe']['total']['ICMSTot']['vICMS'])
+                valor_icms_devido = float(valor_bc * (0.18 - (valor_icms / valor_bc)))
+                valor_frete = float(x['nfeProc']['NFe']['infNFe']['total']['ICMSTot']['vFrete'])
+                self.cur.execute('''insert into entrada
+                (cnpj,chave,emissao,valor_total,valor_bc,valor_icms,valor_icms_devido,valor_frete) values
+                (?,?,?,?,?,?,?,?)''', (
+                    cnpj, chave, emissao, valor_total, valor_bc, valor_icms, valor_icms_devido, valor_frete))
+                self.con.commit()
 
     def process_saida(self):
         all_saidas = glob('./saida/*.xml')
