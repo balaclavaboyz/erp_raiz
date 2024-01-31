@@ -186,23 +186,6 @@ class NotaEntrada:
         self.cur.execute('select * from saida')
         for iii in self.cur.fetchall():
             pp(iii)
-                # antigo
-                # prods = x['nfeProc']['NFe']['infNFe']['det']
-                # if type(prods) is list:
-                #     for item in prods:
-                #         if item['prod']['xProd'] in self.stock:
-                #             old = self.stock.get(item['prod']['xProd'])
-                #             new = int(old) + item['prod']['qCom']
-                #             self.stock_saida.update({item['prod']['xProd']: new})
-                #         else:
-                #             self.stock_saida.update({item['prod']['xProd']: item['prod']['qCom']})
-                # else:
-                #     if prods['prod']['xProd'] in self.stock:
-                #         old = self.stock.get(prods['prod']['xProd'])
-                #         new = int(old) + prods['prod']['qCom']
-                #         self.stock_saida.update({prods['prod']['xProd']: new})
-                #     else:
-                #         self.stock_saida.update({prods['prod']['xProd']: prods['prod']['qCom']})
 
     def get_pl(self) -> float:
         difal = self.get_icms_owned()
