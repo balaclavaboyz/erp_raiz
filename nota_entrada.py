@@ -96,7 +96,7 @@ class NotaEntrada:
                                  'CABO DADOS SATA 50CM PLUSCABLE (PCT/10)': '10'})
 
         self.receber_nota()
-        self.process_saida()
+        self.receber_saida()
 
         menu()
         # pp(self.chave)
@@ -128,7 +128,7 @@ class NotaEntrada:
                     cnpj, chave, emissao, valor_total, valor_bc, valor_icms, valor_icms_devido, valor_frete))
                 self.con.commit()
 
-    def process_saida(self):
+    def receber_saida(self):
         all_saidas = glob('./saida/*.xml')
         for i in all_saidas:
             with open(i) as f:
