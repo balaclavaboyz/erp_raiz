@@ -1,13 +1,43 @@
-from math import ceil
-import json
 from glob import glob
 import xmltodict
 from pprint import pp
 from collections import deque
+import sqlite3
 
 
 class NotaEntrada:
     def __init__(self):
+        def create_db():
+            # nota de entrada
+            self.cur.execute('''create table if not exists entrada 
+            (id integer primary key autoincrement,
+             cnpj text,
+             chave int,
+             emissao text,
+             valor_total real,
+             valor_bc real,
+             valor_icms real,
+             valor_icms_devido real,
+             valor_frete real
+             )''')
+            # dados dos produtos
+            self.cur.execute('''create table if not exists prods
+            (id integer primary key,
+            fk_nota_entrada integer,
+            nome text,
+            quant int,
+            valor_uni real,
+            valor_bc_icms real,
+            valor_icms real,
+            valor_icms_devido real,
+            valor_aliquota_icms real,
+            ecan int,
+            foreign key(fk_nota_entrada) references entrada(id))''')
+            self.con.commit()
+            # self.cur.execute('''select * from sqlite_master where type=\'table\'''')
+            # for i in self.cur.fetchall():
+            #     pp(i)
+
         def menu():
             while True:
                 pp('1. show stock')
@@ -39,6 +69,11 @@ class NotaEntrada:
 
         self.receber_nota()
         self.process_saida()
+
+        self.con = sqlite3.connect(':memory:')
+        self.cur = self.con.cursor()
+
+        create_db()
         menu()
         # pp(self.chave)
         # pp(self.nome)
@@ -61,8 +96,8 @@ class NotaEntrada:
         for i in all_saidas:
             with open(i) as f:
                 x = xmltodict.parse(f.read())
-                pp(x)
-                exit()
+                # pp(x)
+                # exit()
                 prods = x['nfeProc']['NFe']['infNFe']['det']
                 if type(prods) is list:
                     for item in prods:
