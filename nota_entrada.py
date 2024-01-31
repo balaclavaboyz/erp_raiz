@@ -133,26 +133,76 @@ class NotaEntrada:
         for i in all_saidas:
             with open(i) as f:
                 x = xmltodict.parse(f.read())
-                # pp(x)
-                # exit()
-                prods = x['nfeProc']['NFe']['infNFe']['det']
-                if type(prods) is list:
-                    for item in prods:
-                        if item['prod']['xProd'] in self.stock:
-                            old = self.stock.get(item['prod']['xProd'])
-                            new = int(old) + item['prod']['qCom']
-                            self.stock_saida.update({item['prod']['xProd']: new})
-                        else:
-                            self.stock_saida.update({item['prod']['xProd']: item['prod']['qCom']})
+
+                if type(x['nfeProc']['NFe']['infNFe']['det']) is list:
+                    for one_prod in x['nfeProc']['NFe']['infNFe']['det']:
+                        cean = one_prod['prod']['cEAN']
+                        quant = one_prod['prod']['qCom']
+                        valor_total = one_prod['prod']['vProd']
+                        frete = x['nfeProc']['NFe']['infNFe']['total']['ICMSTot']['vFrete']
+                        chave = x['nfeProc']['NFe']['infNFe']['@Id']
+
+                        try:
+                            cpf_cnpj = x['nfeProc']['NFe']['infNFe']['dest']['CPF']
+                        except KeyError as e:
+                            cpf_cnpj = x['nfeProc']['NFe']['infNFe']['dest']['CNPJ']
+
+                        cep = x['nfeProc']['NFe']['infNFe']['dest']['enderDest']['CEP']
+                        rua = x['nfeProc']['NFe']['infNFe']['dest']['enderDest']['xLgr']
+                        municipio = x['nfeProc']['NFe']['infNFe']['dest']['enderDest']['xMun']
+                        uf = x['nfeProc']['NFe']['infNFe']['dest']['enderDest']['UF']
+                        pais = x['nfeProc']['NFe']['infNFe']['dest']['enderDest']['xPais']
+                        nome = x['nfeProc']['NFe']['infNFe']['dest']['xNome']
+                        complemento = x['nfeProc']['NFe']['infNFe']['dest']['enderDest']['xCpl']
+                        self.cur.execute('''insert into saida
+                        (cean,quant,valor_total,frete,chave,cpf_cnpj,cep,rua,municipio, uf,pais,nome,complemento) values(?,?,?,?,?,?,?,?,?,?,?,?,?)''',
+                                         (cean, quant, valor_total, frete, chave, cpf_cnpj, cep, rua, municipio, uf,
+                                          pais, nome, complemento))
+                        self.con.commit()
                 else:
-                    if prods['prod']['xProd'] in self.stock:
-                        old = self.stock.get(prods['prod']['xProd'])
-                        new = int(old) + prods['prod']['qCom']
-                        self.stock_saida.update({prods['prod']['xProd']: new})
-                    else:
-                        self.stock_saida.update({prods['prod']['xProd']: prods['prod']['qCom']})
-                        # TODO fix this
-        # pp(self.stock_saida)
+                    one_prod = x['nfeProc']['NFe']['infNFe']['det']
+
+                    cean = one_prod['prod']['cEAN']
+                    quant = one_prod['prod']['qCom']
+                    valor_total = one_prod['prod']['vProd']
+                    frete = x['nfeProc']['NFe']['infNFe']['total']['ICMSTot']['vFrete']
+                    chave = x['nfeProc']['NFe']['infNFe']['@Id']
+                    try:
+                        cpf_cnpj = x['nfeProc']['NFe']['infNFe']['dest']['CPF']
+                    except KeyError as e:
+                        cpf_cnpj = x['nfeProc']['NFe']['infNFe']['dest']['CNPJ']
+                    cep = x['nfeProc']['NFe']['infNFe']['dest']['enderDest']['CEP']
+                    rua = x['nfeProc']['NFe']['infNFe']['dest']['enderDest']['xLgr']
+                    municipio = x['nfeProc']['NFe']['infNFe']['dest']['enderDest']['xMun']
+                    uf = x['nfeProc']['NFe']['infNFe']['dest']['enderDest']['UF']
+                    pais = x['nfeProc']['NFe']['infNFe']['dest']['enderDest']['xPais']
+                    nome = x['nfeProc']['NFe']['infNFe']['dest']['xNome']
+                    complemento = x['nfeProc']['NFe']['infNFe']['dest']['enderDest']['xCpl']
+                    self.cur.execute('''insert into saida
+                    (cean,quant,valor_total,frete,chave,cpf_cnpj,cep,rua,municipio, uf,pais,nome,complemento) values(?,?,?,?,?,?,?,?,?,?,?,?,?)''',
+                                     (cean, quant, valor_total, frete, chave, cpf_cnpj, cep, rua, municipio, uf, pais,
+                                      nome, complemento))
+                    self.con.commit()
+        self.cur.execute('select * from saida')
+        for iii in self.cur.fetchall():
+            pp(iii)
+                # antigo
+                # prods = x['nfeProc']['NFe']['infNFe']['det']
+                # if type(prods) is list:
+                #     for item in prods:
+                #         if item['prod']['xProd'] in self.stock:
+                #             old = self.stock.get(item['prod']['xProd'])
+                #             new = int(old) + item['prod']['qCom']
+                #             self.stock_saida.update({item['prod']['xProd']: new})
+                #         else:
+                #             self.stock_saida.update({item['prod']['xProd']: item['prod']['qCom']})
+                # else:
+                #     if prods['prod']['xProd'] in self.stock:
+                #         old = self.stock.get(prods['prod']['xProd'])
+                #         new = int(old) + prods['prod']['qCom']
+                #         self.stock_saida.update({prods['prod']['xProd']: new})
+                #     else:
+                #         self.stock_saida.update({prods['prod']['xProd']: prods['prod']['qCom']})
 
     def get_pl(self) -> float:
         difal = self.get_icms_owned()
