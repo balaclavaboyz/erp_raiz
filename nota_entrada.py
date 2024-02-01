@@ -36,6 +36,7 @@ class NotaEntrada:
 
             self.cur.execute('''create table if not exists saida
             (id integer primary key autoincrement,
+            emissao text,
             cean int,
             quant int,
             valor_total real,
@@ -85,7 +86,7 @@ class NotaEntrada:
         self.prods = deque()
         self.icms = deque()
 
-        self.con = sqlite3.connect(':memory:')
+        self.con = sqlite3.connect('db.db')
         self.cur = self.con.cursor()
         create_db()
 
@@ -107,7 +108,7 @@ class NotaEntrada:
     def receber_nota(self):
         todas_notas = glob('./entrada/*.xml')
         for i in todas_notas:
-            with open(i) as f:
+            with open(i, encoding='utf-8') as f:
                 x = xmltodict.parse(f.read())
                 # pp(x['nfeProc']['NFe']['infNFe'])
                 # self.chave.append(x['nfeProc']['NFe']['infNFe']['@Id'])
@@ -131,11 +132,11 @@ class NotaEntrada:
     def receber_saida(self):
         all_saidas = glob('./saida/*.xml')
         for i in all_saidas:
-            with open(i) as f:
+            with open(i, encoding='utf-8') as f:
                 x = xmltodict.parse(f.read())
-
                 if type(x['nfeProc']['NFe']['infNFe']['det']) is list:
                     for one_prod in x['nfeProc']['NFe']['infNFe']['det']:
+                        emissao = x['nfeProc']['NFe']['infNFe']['ide']['dhEmi']
                         cean = one_prod['prod']['cEAN']
                         quant = one_prod['prod']['qCom']
                         valor_total = one_prod['prod']['vProd']
@@ -155,9 +156,11 @@ class NotaEntrada:
                         nome = x['nfeProc']['NFe']['infNFe']['dest']['xNome']
                         complemento = x['nfeProc']['NFe']['infNFe']['dest']['enderDest']['xCpl']
                         self.cur.execute('''insert into saida
-                        (cean,quant,valor_total,frete,chave,cpf_cnpj,cep,rua,municipio, uf,pais,nome,complemento) values(?,?,?,?,?,?,?,?,?,?,?,?,?)''',
-                                         (cean, quant, valor_total, frete, chave, cpf_cnpj, cep, rua, municipio, uf,
-                                          pais, nome, complemento))
+                        (emissao,cean,quant,valor_total,frete,chave,cpf_cnpj,cep,rua,municipio, uf,pais,nome,complemento) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?)''',
+                                         (
+                                         emissao, cean, quant, valor_total, frete, chave, cpf_cnpj, cep, rua, municipio,
+                                         uf,
+                                         pais, nome, complemento))
                         self.con.commit()
                 else:
                     one_prod = x['nfeProc']['NFe']['infNFe']['det']
@@ -183,20 +186,29 @@ class NotaEntrada:
                                      (cean, quant, valor_total, frete, chave, cpf_cnpj, cep, rua, municipio, uf, pais,
                                       nome, complemento))
                     self.con.commit()
-        self.cur.execute('select * from saida')
-        for iii in self.cur.fetchall():
-            pp(iii)
 
     def get_pl(self) -> float:
-        difal = self.get_icms_owned()
-        stock_entrada = self.stock
-        stock_saida = self.stock_saida
-        pp(stock_entrada)
-        pp(stock_saida)
-        res = {x: stock_entrada[x] - stock_saida[x] for x in stock_entrada if x in stock_saida}
-        pp(res)
-        # TODO
-        return 0.0
+        icms_devido = 0.0
+        valor_venda = 0.0
+        valor_produto = 0.0
+        self.cur.execute('select valor_total from entrada')
+        for i in self.cur.fetchall():
+            valor_produto += float(i[0])
+
+        self.cur.execute('select valor_icms_devido from entrada')
+        for i in self.cur.fetchall():
+            icms_devido += float(i[0])
+
+        # get all simples nacional tax
+        self.cur.execute('select valor_total from saida')
+        for i in self.cur.fetchall():
+            valor_venda += float(i[0])
+
+        pp(icms_devido)
+        pp(valor_venda)
+        pp(valor_produto)
+        pp('total')
+        return -icms_devido + valor_venda - (0.04 * valor_venda) - valor_produto
 
     def get_total_prods(self) -> list:
         total = []
