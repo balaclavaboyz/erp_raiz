@@ -23,7 +23,8 @@ class NotaEntrada:
             # dados dos produtos
             self.cur.execute('''create table if not exists prods
             (id integer primary key,
-            fk_nota_entrada integer,
+            fk_chave_entrada integer,
+            fk_chave_saida integer,
             nome text,
             quant int,
             valor_uni real,
@@ -32,32 +33,20 @@ class NotaEntrada:
             valor_icms_devido real,
             valor_aliquota_icms real,
             ecan int,
-            foreign key(fk_nota_entrada) references entrada(id))''')
+            ml_comiss real,
+            ml_taxa real,
+            foreign key(fk_chave_entrada) references entrada(chave),
+            foreign key(fk_chave_saida) references saida(chave))''')
 
             self.cur.execute('''create table if not exists saida
             (id integer primary key autoincrement,
             emissao text,
-            cean int,
-            quant int,
             valor_total real,
             frete real,
             chave int,
-            cpf_cnpj int,
-            cep int,
-            rua text,
-            municipio text,
-            uf text,
-            pais text,
-            nome text,
-            complemento text)''')
+            cpf_cnpj int
+            )''')
 
-            self.cur.execute('''create table if not exists anuncio
-            (id integer primary key,
-            cean int,
-            quant int,
-            taxa_fixa real,
-            taxa_comiss real,
-            is_full int)''')
             self.con.commit()
             # self.cur.execute('''select * from sqlite_master where type=\'table\'''')
             # for i in self.cur.fetchall():
@@ -137,8 +126,8 @@ class NotaEntrada:
                 if type(x['nfeProc']['NFe']['infNFe']['det']) is list:
                     for one_prod in x['nfeProc']['NFe']['infNFe']['det']:
                         emissao = x['nfeProc']['NFe']['infNFe']['ide']['dhEmi']
-                        cean = one_prod['prod']['cEAN']
-                        quant = one_prod['prod']['qCom']
+                        # cean = one_prod['prod']['cEAN']
+                        # quant = one_prod['prod']['qCom']
                         valor_total = one_prod['prod']['vProd']
                         frete = x['nfeProc']['NFe']['infNFe']['total']['ICMSTot']['vFrete']
                         chave = x['nfeProc']['NFe']['infNFe']['@Id']
@@ -148,43 +137,44 @@ class NotaEntrada:
                         except KeyError as e:
                             cpf_cnpj = x['nfeProc']['NFe']['infNFe']['dest']['CNPJ']
 
-                        cep = x['nfeProc']['NFe']['infNFe']['dest']['enderDest']['CEP']
-                        rua = x['nfeProc']['NFe']['infNFe']['dest']['enderDest']['xLgr']
-                        municipio = x['nfeProc']['NFe']['infNFe']['dest']['enderDest']['xMun']
-                        uf = x['nfeProc']['NFe']['infNFe']['dest']['enderDest']['UF']
-                        pais = x['nfeProc']['NFe']['infNFe']['dest']['enderDest']['xPais']
-                        nome = x['nfeProc']['NFe']['infNFe']['dest']['xNome']
-                        complemento = x['nfeProc']['NFe']['infNFe']['dest']['enderDest']['xCpl']
+                        # cep = x['nfeProc']['NFe']['infNFe']['dest']['enderDest']['CEP']
+                        # rua = x['nfeProc']['NFe']['infNFe']['dest']['enderDest']['xLgr']
+                        # municipio = x['nfeProc']['NFe']['infNFe']['dest']['enderDest']['xMun']
+                        # uf = x['nfeProc']['NFe']['infNFe']['dest']['enderDest']['UF']
+                        # pais = x['nfeProc']['NFe']['infNFe']['dest']['enderDest']['xPais']
+                        # nome = x['nfeProc']['NFe']['infNFe']['dest']['xNome']
+                        # complemento = x['nfeProc']['NFe']['infNFe']['dest']['enderDest']['xCpl']
                         self.cur.execute('''insert into saida
-                        (emissao,cean,quant,valor_total,frete,chave,cpf_cnpj,cep,rua,municipio, uf,pais,nome,complemento) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?)''',
-                                         (
-                                         emissao, cean, quant, valor_total, frete, chave, cpf_cnpj, cep, rua, municipio,
-                                         uf,
-                                         pais, nome, complemento))
+                        (emissao,valor_total,frete,chave,cpf_cnpj) values(?,?,?,?,?)''',
+                                         (emissao, valor_total, frete, chave, cpf_cnpj,))
                         self.con.commit()
                 else:
+                    # fixo
                     one_prod = x['nfeProc']['NFe']['infNFe']['det']
 
-                    cean = one_prod['prod']['cEAN']
-                    quant = one_prod['prod']['qCom']
+                    # eh a msm function acima
+                    emissao = x['nfeProc']['NFe']['infNFe']['ide']['dhEmi']
+                    # cean = one_prod['prod']['cEAN']
+                    # quant = one_prod['prod']['qCom']
                     valor_total = one_prod['prod']['vProd']
                     frete = x['nfeProc']['NFe']['infNFe']['total']['ICMSTot']['vFrete']
                     chave = x['nfeProc']['NFe']['infNFe']['@Id']
+
                     try:
                         cpf_cnpj = x['nfeProc']['NFe']['infNFe']['dest']['CPF']
                     except KeyError as e:
                         cpf_cnpj = x['nfeProc']['NFe']['infNFe']['dest']['CNPJ']
-                    cep = x['nfeProc']['NFe']['infNFe']['dest']['enderDest']['CEP']
-                    rua = x['nfeProc']['NFe']['infNFe']['dest']['enderDest']['xLgr']
-                    municipio = x['nfeProc']['NFe']['infNFe']['dest']['enderDest']['xMun']
-                    uf = x['nfeProc']['NFe']['infNFe']['dest']['enderDest']['UF']
-                    pais = x['nfeProc']['NFe']['infNFe']['dest']['enderDest']['xPais']
-                    nome = x['nfeProc']['NFe']['infNFe']['dest']['xNome']
-                    complemento = x['nfeProc']['NFe']['infNFe']['dest']['enderDest']['xCpl']
+
+                    # cep = x['nfeProc']['NFe']['infNFe']['dest']['enderDest']['CEP']
+                    # rua = x['nfeProc']['NFe']['infNFe']['dest']['enderDest']['xLgr']
+                    # municipio = x['nfeProc']['NFe']['infNFe']['dest']['enderDest']['xMun']
+                    # uf = x['nfeProc']['NFe']['infNFe']['dest']['enderDest']['UF']
+                    # pais = x['nfeProc']['NFe']['infNFe']['dest']['enderDest']['xPais']
+                    # nome = x['nfeProc']['NFe']['infNFe']['dest']['xNome']
+                    # complemento = x['nfeProc']['NFe']['infNFe']['dest']['enderDest']['xCpl']
                     self.cur.execute('''insert into saida
-                    (cean,quant,valor_total,frete,chave,cpf_cnpj,cep,rua,municipio, uf,pais,nome,complemento) values(?,?,?,?,?,?,?,?,?,?,?,?,?)''',
-                                     (cean, quant, valor_total, frete, chave, cpf_cnpj, cep, rua, municipio, uf, pais,
-                                      nome, complemento))
+                        (emissao,valor_total,frete,chave,cpf_cnpj) values(?,?,?,?,?)''',
+                                     (emissao, valor_total, frete, chave, cpf_cnpj,))
                     self.con.commit()
 
     def get_pl(self) -> float:
