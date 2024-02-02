@@ -141,7 +141,8 @@ class NotaEntrada:
                     q_icms_devido = q_icms_bc * (0.18 - q_icms_porcent)
                     # taxa_fixa, can be only be calc after sell not before
                     q_taxa_fixa = 6 if (q_valor_uni + q_frete + 6) / (
-                            1 - SIMPLES_NACIONAL - ML_COMISS) >= 79 else 19  # another convoluted math to calculate if the taxa fixa is 6 or 19
+                            1 - SIMPLES_NACIONAL - ML_COMISS) >= 79 else 19
+                    # another convoluted math to calculate if the taxa fixa is 6 or 19
                     return q_cean, q_xProd, q_qCom, q_frete, q_valor_uni, q_icms_devido, q_taxa_fixa
 
                 def db_insert_prod(i_chave, i_xProd, i_qCom, i_valor_uni, i_icms_devido, i_cean, i_taxa_fixa):
@@ -193,6 +194,7 @@ class NotaEntrada:
         for i in all_saidas:
             with open(i, encoding='utf-8') as f:
                 x = xmltodict.parse(f.read())
+
                 if type(x['nfeProc']['NFe']['infNFe']['det']) is list:
                     for one_prod in x['nfeProc']['NFe']['infNFe']['det']:
                         emissao = x['nfeProc']['NFe']['infNFe']['ide']['dhEmi']
@@ -248,31 +250,37 @@ class NotaEntrada:
                     self.con.commit()
 
     def get_pl(self) -> float:
-        icms_devido = 0.0
-        valor_venda = 0.0
-        valor_produto = 0.0
-        emissao_entrada = []
-        self.cur.execute('select valor_total,emissao from entrada')
-        for i in self.cur.fetchall():
-            valor_produto += float(i[0])
-            emissao_entrada.append(i[1])
-        self.cur.execute('select valor_icms_devido from entrada')
-        for i in self.cur.fetchall():
-            icms_devido += float(i[0])
 
-        # get all simples nacional tax
-        self.cur.execute('select valor_total from saida')
-        for i in self.cur.fetchall():
-            valor_venda += float(i[0])
+        # icms_devido = 0.0
+        # valor_venda = 0.0
+        # valor_produto = []
+        # emissao_entrada = []
+        # self.cur.execute('select valor_total,emissao from entrada')
+        # for i in self.cur.fetchall():
+        #     valor_produto.append(i[0])
+        #     emissao_entrada.append(i[1])
+        # self.cur.execute('select valor_icms_devido from entrada')
+        # for i in self.cur.fetchall():
+        #     icms_devido += float(i[0])
+        #
+        # # get all simples nacional tax
+        # self.cur.execute('select valor_total from saida')
+        # for i in self.cur.fetchall():
+        #     valor_venda += float(i[0])
 
-        df = pandas.to_datetime(pandas.Series(emissao_entrada))
-        pp(df.dt.to_period('M'))
-        # TODO group by month
-        pp(icms_devido)
-        pp(valor_venda)
-        pp(valor_produto)
-        pp('total')
-        return -icms_devido + valor_venda - (0.04 * valor_venda) - valor_produto
+        dfe = pandas.read_sql_query('select valor_total, emissao, valor_icms_devido, valor_frete from entrada', self.con)
+        dfe['emissao'] = pandas.to_datetime(dfe['emissao'])
+        dfe.set_index('emissao',inplace=True)
+        pp(dfe.groupby(pandas.Grouper(freq='ME')).sum())
+
+        df = pandas.read_sql_query('select valor_total, emissao from saida',self.con)
+        df['emissao'] = pandas.to_datetime(df['emissao'])
+        df.set_index('emissao', inplace=True)
+        pp(df.groupby(pandas.Grouper(freq='ME')).sum())
+
+
+        # return -icms_devido + valor_venda - (0.04 * valor_venda) - valor_produto
+        return 0.0
 
     def get_total_prods(self) -> list:
         total = []
@@ -283,6 +291,7 @@ class NotaEntrada:
             total.append(tmp)
         return total
 
+    # replace dis
     def get_prod_stock(self):
         for nota in self.prods:
             for prod in nota:
@@ -301,6 +310,7 @@ class NotaEntrada:
                     self.stock.update({name: qnt})
         pp(self.stock)
 
+    # redo with sqlite
     def get_icms_owned(self):
         res = []
         for i in self.icms:
