@@ -74,18 +74,13 @@ class NotaEntrada:
                 if 5 > res > 0:
                     match res:
                         case 1:
-                            self.get_prod_stock()
+                            pp('nada')
                         case 2:
-                            pp(self.get_icms_owned())
+                            pp('nada')
                         case 3:
-                            pp(self.get_total_prods())
+                            pp('nada')
                         case 4:
                             self.get_pl()
-
-        self.chave = deque()
-        self.nome = deque()
-        self.prods = deque()
-        self.icms = deque()
 
         self.con = sqlite3.connect('db.db')
         self.cur = self.con.cursor()
@@ -101,10 +96,6 @@ class NotaEntrada:
         self.receber_saida()
 
         menu()
-        # pp(self.chave)
-        # pp(self.nome)
-        # pp(self.prods)
-        # pp(self.icms)
 
     def receber_nota(self):
         todas_notas = glob('./entrada/*.xml')
