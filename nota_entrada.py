@@ -92,12 +92,12 @@ class NotaEntrada:
         self.stock_rules.update({'SOLDA TUBO 25G BEST 183 MSX10 AZ (CX/36)': '36',
                                  'CABO DADOS SATA 50CM PLUSCABLE (PCT/10)': '10'})
 
-        self.receber_nota()
+        self.receber_entrada()
         self.receber_saida()
 
         menu()
 
-    def receber_nota(self):
+    def receber_entrada(self):
         todas_notas = glob('./entrada/*.xml')
         for i in todas_notas:
             with open(i, encoding='utf-8') as f:
@@ -133,7 +133,7 @@ class NotaEntrada:
                         q_frete = float(one_prod['prod']['vFrete'])
                     except KeyError:
                         q_frete = 0.0
-                    q_valor_tot = float(one_prod['prod']['vProd'])*-1
+                    q_valor_tot = float(one_prod['prod']['vProd']) * -1
 
                     # TODO see if decimal notation is used
                     q_icms_bc = float(one_prod['imposto']['ICMS']['ICMS00']['vBC'])
