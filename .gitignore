@@ -1,3 +1,4 @@
 *.xml
 /entrada
 /saida
+*.db
