@@ -152,14 +152,16 @@ class NotaEntrada:
                     quant,
                     valor_tot,
                     valor_icms_devido,
-                    cean
-                    )values(?,?,?,?,?,?)''', (
+                    cean,
+                    emissao
+                    )values(?,?,?,?,?,?,?)''', (
                         i_chave,  # fk_chave_saida,
                         i_xProd,  # nome,
                         i_qCom,  # quant,
                         i_valor_tot,  # valor_uni,
                         i_icms_devido,  # valor_icms_devivo,
-                        i_cean  # cean,
+                        i_cean,
+                        emissao  # cean,
                     ))
                     self.con.commit()
 
