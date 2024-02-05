@@ -296,6 +296,8 @@ class NotaEntrada:
         # for i in self.cur.fetchall():
         #     valor_venda += float(i[0])
 
+        total = 0.0
+
         dfe = pandas.read_sql_query('select valor_total, emissao, valor_icms_devido, valor_frete from entrada',
                                     self.con)
         dfe['emissao'] = pandas.to_datetime(dfe['emissao'])
