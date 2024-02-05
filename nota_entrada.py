@@ -309,6 +309,15 @@ class NotaEntrada:
         df.set_index('emissao', inplace=True)
         pp(df.groupby(pandas.Grouper(freq='ME')).sum())
 
+        self.cur.execute('''
+        select valor_tot ,strftime('%Y-%m-%d', emissao) as emissao_m
+        from prods
+        group by strftime('%Y-%m',emissao_m)
+        ''')
+        for i in self.cur.fetchall():
+            pp(i)
+            total += i[0]
+        pp(total)
         # return -icms_devido + valor_venda - (0.04 * valor_venda) - valor_produto
         return 0.0
 
