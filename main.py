@@ -1,11 +1,12 @@
 from nota_entrada import NotaEntrada
-
-
-def main():
-    n = NotaEntrada()
-    # n.get_total_prods()
-    # n.get_icms_owned()
-    # n.get_prod_stock()
+from os.path import exists
+from os import remove
+from pprint import pp
 
 if __name__ == '__main__':
-    main()
+    if exists('./db.db'):
+        remove('./db.db')
+        pp('removido db')
+    else:
+        pp('db n exists')
+    n = NotaEntrada()
