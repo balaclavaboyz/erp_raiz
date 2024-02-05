@@ -10,10 +10,18 @@ SIMPLES_NACIONAL = 0.04
 ML_COMISS = 0.12
 
 
+class State:
+    def __init__(self):
+        self.con = sqlite3.connect('db.db')
+        self.cur = self.con.cursor()
+        # pandas df here
+        self.simples_nacional = 0.04
+        self.ml_comiss = 0.12
+
+
 class NotaEntrada:
     def __init__(self):
         def create_db():
-
             # nota de entrada
             self.cur.execute('''create table if not exists entrada 
             (id integer primary key autoincrement,
